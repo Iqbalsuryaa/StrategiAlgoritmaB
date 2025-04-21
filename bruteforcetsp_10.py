@@ -78,7 +78,8 @@ if page == "Study Kasus III":
                 # Hapus akun yang dipilih
                 del st.session_state.accounts[user]
                 st.success(f"Akun {user} telah dihapus!")
-                st.experimental_rerun()  # Refresh halaman setelah penghapusan
+                # Tidak menggunakan rerun, karena Streamlit otomatis refresh saat state berubah.
+                st.experimental_rerun()
     else:
         st.write("Belum ada akun yang ditambahkan.")
 
