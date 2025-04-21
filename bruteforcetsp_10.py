@@ -70,37 +70,4 @@ if page == "Study Kasus III":
     # Menampilkan daftar akun yang telah ditambahkan
     st.subheader("Daftar Akun yang Tersedia:")
     if st.session_state.accounts:
-        for user in list(st.session_state.accounts.keys()):
-            st.write(f"- {user}")
-            # Menambahkan tombol hapus untuk setiap akun
-            delete_button = st.button(f"Hapus {user}", key=f"delete_{user}")
-            if delete_button:
-                del st.session_state.accounts[user]
-                st.success(f"Akun {user} telah dihapus!")
-                st.experimental_rerun()  # Refresh halaman setelah penghapusan
-    else:
-        st.write("Belum ada akun yang ditambahkan.")
-
-    # Input untuk memilih akun yang ingin dites login
-    if st.session_state.accounts:
-        selected_user = st.selectbox("Pilih Username untuk Tes Brute Force", list(st.session_state.accounts.keys()))
-
-        # Tombol untuk mulai brute force
-        if st.button("Mulai Brute Force"):
-            with st.spinner("🔄 Menjalankan serangan brute force..."):
-                results, total_attempts, elapsed_time = brute_force_multi_user(st.session_state.accounts)
-
-                # Menampilkan hasil
-                st.subheader(f"🔑 Hasil Brute Force untuk Akun: {selected_user}")
-                user_result = next((result for result in results if result["username"] == selected_user), None)
-                if user_result:
-                    if user_result["found"]:
-                        st.success(f"✅ Password ditemukan untuk {user_result['username']}: {user_result['password']}")
-                        st.write(f"🔁 Jumlah percobaan: {user_result['attempts']}")
-                    else:
-                        st.error(f"❌ Password untuk {user_result['username']} tidak ditemukan.")
-                else:
-                    st.error(f"❌ Tidak ada hasil ditemukan untuk {selected_user}.")
-
-                st.write(f"🕒 Total waktu: {elapsed_time:.2f} detik")
-                st.write(f"🔁 Total percobaan semua akun: {total_attempts}")
+        for user in list(st
