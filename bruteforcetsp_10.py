@@ -70,8 +70,14 @@ if page == "Study Kasus III":
     # Menampilkan daftar akun yang telah ditambahkan
     st.subheader("Daftar Akun yang Tersedia:")
     if st.session_state.accounts:
-        for user in st.session_state.accounts:
+        for user in list(st.session_state.accounts.keys()):
             st.write(f"- {user}")
+            # Menambahkan tombol hapus untuk setiap akun
+            delete_button = st.button(f"Hapus {user}", key=f"delete_{user}")
+            if delete_button:
+                del st.session_state.accounts[user]
+                st.success(f"Akun {user} telah dihapus!")
+                st.experimental_rerun()  # Refresh halaman setelah penghapusan
     else:
         st.write("Belum ada akun yang ditambahkan.")
 
