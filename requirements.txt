@@ -3,9 +3,4 @@ pandas
 folium
 streamlit_folium
 matplotlib
-datetime
-time
-uv
-rich
-markdown-it-py
-pygments
+
