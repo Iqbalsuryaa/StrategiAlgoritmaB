@@ -1,56 +1,54 @@
 import datetime
+import time
+import matplotlib.pyplot as plt
 
-# Fungsi untuk meminta input tanggal lahir dari pengguna
-def input_target_date():
-    # Meminta input untuk tanggal lahir (DD-MM-YYYY)
-    date_input = st.text_input("Masukkan tanggal lahir yang benar (DD-MM-YYYY):")
-    
-    if date_input:
-        try:
-            # Mengonversi input menjadi tipe datetime
-            target_date = datetime.datetime.strptime(date_input, "%d-%m-%Y").date()
-            return target_date
-        except ValueError:
-            st.error("Format tanggal salah. Harap gunakan format DD-MM-YYYY.")
-            return None
-    return None
+# Input dari pengguna
+input_date_str = input("Masukkan tanggal lahir (format: DD-MM-YYYY): ")
+target_date = datetime.datetime.strptime(input_date_str, "%d-%m-%Y").date()
 
-# Fungsi brute force untuk menebak tanggal lahir
-def brute_force_birthday(target_date):
-    start_year = 1990
-    end_year = 2005
+# Rentang tahun tebakan
+start_year = 1990
+end_year = target_date.year
 
-    attempts = 0
-    found = False  # Flag untuk menghentikan semua loop
+attempts = 0
+found = False
+start_time = time.time()  # Mulai hitung waktu
 
-    for year in range(start_year, end_year + 1):
-        for month in range(1, 13):
-            for day in range(1, 32):
-                try:
-                    guess = datetime.date(year, month, day)
-                    attempts += 1
-                    if guess == target_date:
-                        return guess, attempts
-                except ValueError:
-                    continue
-    return None, attempts
+guess_dates = []
 
-# -----------------------------
-# Streamlit Interface
-# -----------------------------
-import streamlit as st
+for year in range(start_year, end_year + 1):
+    for month in range(1, 13):
+        for day in range(1, 32):
+            try:
+                guess = datetime.date(year, month, day)
+                attempts += 1
+                guess_dates.append((attempts, guess))
 
-st.title("🎯 Brute Force Menebak Tanggal Lahir")
+                if guess == target_date:
+                    end_time = time.time()
+                    print(f"\n🎯 Tanggal ditemukan: {guess.strftime('%d-%m-%Y')}")
+                    print(f"🔁 Jumlah percobaan: {attempts}")
+                    print(f"🕒 Total waktu pencarian: {end_time - start_time:.4f} detik")
+                    found = True
+                    break
+            except ValueError:
+                continue
+        if found:
+            break
+    if found:
+        break
 
-# Meminta input untuk tanggal lahir yang benar
-target_date = input_target_date()
+# Visualisasi grafik pencarian brute force
+x = [i[0] for i in guess_dates]  # Jumlah percobaan
+y = [i[1].toordinal() for i in guess_dates]  # Menggunakan ordinal untuk menggambarkan tanggal
 
-# Jika tanggal lahir dimasukkan, jalankan brute force
-if target_date:
-    with st.spinner("🔄 Menjalankan serangan brute force..."):
-        guess, attempts = brute_force_birthday(target_date)
-        if guess:
-            st.success(f"🎯 Tanggal lahir ditemukan: {guess.strftime('%d-%m-%Y')}")
-            st.write(f"🔁 Jumlah percobaan: {attempts}")
-        else:
-            st.error("❌ Tanggal lahir tidak ditemukan.")
+plt.figure(figsize=(10, 5))
+plt.plot(x, y, label="Tanggal Tebakan", color='green')
+plt.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
+plt.xlabel("Jumlah Percobaan")
+plt.ylabel("Ordinal Tanggal")
+plt.title("Grafik Waktu Pencarian Brute Force untuk Tanggal Lahir")
+plt.legend()
+plt.tight_layout()
+plt.grid(True)
+plt.show()
