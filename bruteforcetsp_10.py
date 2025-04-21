@@ -1,69 +1,91 @@
 import streamlit as st
-import datetime
-import time
-import matplotlib.pyplot as plt
+import pandas as pd
+import math
+import itertools
+import folium
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 
-# Title and Description
-st.title("Pencarian Brute Force Tanggal Lahir")
-st.markdown("""
-Implementasi pencarian brute force untuk menemukan tanggal lahir yang dimasukkan pengguna.
-Melakukan pencatatan waktu dan memvisualisasikan grafik dari proses pencarian tanggal yang dicoba.
-""")
+# -----------------------------
+# Fungsi Haversine
+# -----------------------------
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return R * (2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)))
 
-# Input dari pengguna
-input_date_str = st.text_input("Masukkan tanggal lahir (format: DD-MM-YYYY):", "")
-if input_date_str:
-    try:
-        target_date = datetime.datetime.strptime(input_date_str, "%d-%m-%Y").date()
+# -----------------------------
+# Tampilan Streamlit
+# -----------------------------
+st.set_page_config(page_title="Rute Wisata Optimal", layout="wide")
+st.title("📍 Optimasi Rute Tempat Wisata - Brute Force TSP")
 
-        # Rentang tahun tebakan
-        start_year = 1990
-        end_year = target_date.year
+# Upload CSV
+uploaded_file = st.file_uploader("Unggah file CSV tempat wisata:", type="csv")
 
-        attempts = 0
-        found = False
-        start_time = time.time()  # Mulai hitung waktu
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
 
-        guess_dates = []
+    if 'Nama Tempat Wisata' not in df.columns or 'Latitude' not in df.columns or 'Longitude' not in df.columns:
+        st.error("❌ Kolom wajib: 'Nama Tempat Wisata', 'Latitude', dan 'Longitude' tidak ditemukan.")
+    else:
+        locations = df[['Nama Tempat Wisata', 'Latitude', 'Longitude']].dropna().reset_index(drop=True)
+        n = len(locations)
 
-        for year in range(start_year, end_year + 1):
-            for month in range(1, 13):
-                for day in range(1, 32):
-                    try:
-                        guess = datetime.date(year, month, day)
-                        attempts += 1
-                        guess_dates.append((attempts, guess))
+        # Matriks Jarak
+        distance_matrix = [[0]*n for _ in range(n)]
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    distance_matrix[i][j] = haversine(
+                        locations.loc[i, 'Latitude'], locations.loc[i, 'Longitude'],
+                        locations.loc[j, 'Latitude'], locations.loc[j, 'Longitude']
+                    )
 
-                        if guess == target_date:
-                            end_time = time.time()
-                            st.success(f"🎯 Tanggal ditemukan: {guess.strftime('%d-%m-%Y')}")
-                            st.write(f"🔁 Jumlah percobaan: {attempts}")
-                            st.write(f"🕒 Total waktu pencarian: {end_time - start_time:.4f} detik")
-                            found = True
-                            break
-                    except ValueError:
-                        continue
-                if found:
-                    break
-            if found:
-                break
+        # Brute Force TSP
+        all_routes = []
+        for perm in itertools.permutations(range(1, n)):
+            route = [0] + list(perm) + [0]
+            dist = sum(distance_matrix[route[i]][route[i+1]] for i in range(n))
+            all_routes.append((route, dist))
 
-        if not found:
-            st.warning("Tanggal tidak ditemukan dalam rentang tahun yang diberikan.")
+        # Urutkan hasil
+        all_routes.sort(key=lambda x: x[1])
 
-        # Visualisasi
-        x = [i[0] for i in guess_dates]
-        y = [i[1].toordinal() for i in guess_dates]  # ordinal untuk menggambarkan tanggal
+        jumlah_rute = st.slider("Pilih jumlah rute terbaik yang ingin ditampilkan:", 1, min(10, len(all_routes)), 3)
 
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(x, y, label="Tanggal Tebakan", color='green')
-        ax.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
-        ax.set_xlabel("Jumlah Percobaan")
-        ax.set_ylabel("Ordinal Tanggal")
-        ax.set_title("Grafik Waktu Pencarian Brute Force")
-        ax.legend()
-        ax.grid(True)
-        st.pyplot(fig)
+        st.subheader(f"🔁 {jumlah_rute} Rute Terbaik:")
+        rute_terbaik = []
+        for idx in range(min(jumlah_rute, len(all_routes))):
+            route, total_jarak = all_routes[idx]
+            nama_rute = " -> ".join([locations.loc[i, 'Nama Tempat Wisata'] for i in route])
+            rute_terbaik.append({'Rute #': idx + 1, 'Total Jarak (km)': round(total_jarak, 2), 'Rute': nama_rute})
 
-    except ValueError:
-        st.error("Format tanggal salah. Harap masukkan tanggal dalam format DD-MM-YYYY.")
+        rute_df = pd.DataFrame(rute_terbaik)
+        st.dataframe(rute_df)
+
+        # Simpan sebagai CSV
+        csv = rute_df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Unduh Hasil Rute", data=csv, file_name='rute_terbaik.csv', mime='text/csv')
+
+        # Peta Interaktif
+        st.subheader("🗺 Visualisasi Peta Interaktif")
+        map_center = [locations['Latitude'].mean(), locations['Longitude'].mean()]
+        m = folium.Map(location=map_center, zoom_start=12)
+
+        marker_cluster = MarkerCluster().add_to(m)
+        for _, row in locations.iterrows():
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                popup=row['Nama Tempat Wisata']
+            ).add_to(marker_cluster)
+
+        # Tampilkan rute terbaik pertama
+        best_route = all_routes[0][0]
+        route_coords = [[locations.loc[i, 'Latitude'], locations.loc[i, 'Longitude']] for i in best_route]
+        folium.PolyLine(route_coords, color='red', weight=5, opacity=0.8).add_to(m)
+
+        st_folium(m, width=900, height=600)
