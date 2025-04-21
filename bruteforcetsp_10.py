@@ -1,103 +1,143 @@
 import streamlit as st
-import pandas as pd
-import math
-import itertools
-import folium
-from folium.plugins import MarkerCluster
-from streamlit_folium import st_folium
+import datetime
+import time
+import matplotlib.pyplot as plt
 
-# -----------------------------
-# Fungsi Haversine
-# -----------------------------
-def haversine(lat1, lon1, lat2, lon2):
-    R = 6371  # Radius bumi dalam km
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
-    return R * (2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)))
+# ----------------------------
+# Sidebar Navigation
+# ----------------------------
+st.sidebar.title("📚 Navigasi")
+page = st.sidebar.radio("Pilih Halaman:", ["Beranda", "Study Case II", "Study Case III", "Study Case IV", "Study Case V"])
 
-# -----------------------------
-# Tampilan Streamlit
-# -----------------------------
-st.set_page_config(page_title="Rute Wisata Optimal", layout="wide")
-st.title("📍 Optimasi Rute Tempat Wisata - Brute Force TSP")
+# ----------------------------
+# Halaman: Beranda
+# ----------------------------
+if page == "Beranda":
+    st.title("👥 Kelompok 10 - Brute Force App")
+    st.markdown("""
+    Selamat datang di aplikasi Kelompok 10!  
+    Aplikasi ini berisi beberapa studi kasus yang menjelaskan konsep algoritma *Brute Force*.
 
-# Upload CSV
-uploaded_file = st.file_uploader("📤 Unggah file CSV tempat wisata:", type="csv")
+    **Daftar Halaman:**
+    - 🏠 **Beranda**: Halaman informasi umum.
+    - 📘 **Study Case II**: (Konten disesuaikan)
+    - 📙 **Study Case III**: (Konten disesuaikan)
+    - 📗 **Study Case IV**: Menebak tanggal lahir menggunakan brute force.
+    - 📕 **Study Case V**: Brute force tanggal lahir + waktu proses dan grafik.
+    """)
 
-if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file)
+# ----------------------------
+# Halaman: Study Case II
+# ----------------------------
+elif page == "Study Case II":
+    st.title("📘 Study Case II")
+    st.markdown("**(Silakan tambahkan isi dari Study Case II di sini)**")
 
-        required_columns = {'Nama Tempat Wisata', 'Latitude', 'Longitude'}
-        if not required_columns.issubset(df.columns):
-            st.error("❌ Kolom wajib: 'Nama Tempat Wisata', 'Latitude', dan 'Longitude' tidak ditemukan.")
-        else:
-            locations = df[['Nama Tempat Wisata', 'Latitude', 'Longitude']].dropna().reset_index(drop=True)
-            n = len(locations)
+# ----------------------------
+# Halaman: Study Case III
+# ----------------------------
+elif page == "Study Case III":
+    st.title("📙 Study Case III")
+    st.markdown("**(Silakan tambahkan isi dari Study Case III di sini)**")
 
-            if n < 2:
-                st.warning("📌 Setidaknya harus ada dua lokasi wisata untuk menghitung rute.")
+# ----------------------------
+# Halaman: Study Case IV
+# ----------------------------
+elif page == "Study Case IV":
+    st.title("🎯 Study Case IV - Brute Force Menebak Tanggal Lahir")
+
+    def input_target_date():
+        date_input = st.text_input("Masukkan tanggal lahir yang benar (DD-MM-YYYY):")
+        if date_input:
+            try:
+                return datetime.datetime.strptime(date_input, "%d-%m-%Y").date()
+            except ValueError:
+                st.error("Format tanggal salah. Harap gunakan format DD-MM-YYYY.")
+        return None
+
+    def brute_force_birthday(target_date):
+        start_year = 1990
+        end_year = 2005
+        attempts = 0
+        for year in range(start_year, end_year + 1):
+            for month in range(1, 13):
+                for day in range(1, 32):
+                    try:
+                        guess = datetime.date(year, month, day)
+                        attempts += 1
+                        if guess == target_date:
+                            return guess, attempts
+                    except ValueError:
+                        continue
+        return None, attempts
+
+    target_date = input_target_date()
+    if target_date:
+        with st.spinner("🔄 Menjalankan brute force..."):
+            guess, attempts = brute_force_birthday(target_date)
+            if guess:
+                st.success(f"🎯 Tanggal lahir ditemukan: {guess.strftime('%d-%m-%Y')}")
+                st.write(f"🔁 Jumlah percobaan: {attempts}")
             else:
-                # Matriks Jarak
-                distance_matrix = [[0]*n for _ in range(n)]
-                for i in range(n):
-                    for j in range(n):
-                        if i != j:
-                            distance_matrix[i][j] = haversine(
-                                locations.loc[i, 'Latitude'], locations.loc[i, 'Longitude'],
-                                locations.loc[j, 'Latitude'], locations.loc[j, 'Longitude']
-                            )
+                st.error("❌ Tanggal lahir tidak ditemukan.")
 
-                # Brute Force TSP
-                all_routes = []
-                for perm in itertools.permutations(range(1, n)):
-                    route = [0] + list(perm) + [0]
-                    dist = sum(distance_matrix[route[i]][route[i+1]] for i in range(n))
-                    all_routes.append((route, dist))
+# ----------------------------
+# Halaman: Study Case V
+# ----------------------------
+elif page == "Study Case V":
+    st.title("📕 Study Case V - Brute Force dengan Visualisasi")
 
-                # Urutkan hasil
-                all_routes.sort(key=lambda x: x[1])
+    input_date_str = st.text_input("Masukkan tanggal lahir (format: DD-MM-YYYY):", "")
+    if input_date_str:
+        try:
+            target_date = datetime.datetime.strptime(input_date_str, "%d-%m-%Y").date()
 
-                # Slider jumlah rute yang ingin ditampilkan
-                jumlah_rute = st.slider("🔢 Pilih jumlah rute terbaik yang ingin ditampilkan:", 
-                                        min_value=1, 
-                                        max_value=min(10, len(all_routes)), 
-                                        value=3)
+            start_year = 1990
+            end_year = target_date.year
+            attempts = 0
+            guess_dates = []
+            found = False
 
-                st.subheader(f"🔁 {jumlah_rute} Rute Terbaik:")
-                rute_terbaik = []
-                for idx in range(jumlah_rute):
-                    route, total_jarak = all_routes[idx]
-                    nama_rute = " -> ".join([locations.loc[i, 'Nama Tempat Wisata'] for i in route])
-                    rute_terbaik.append({'Rute #': idx + 1, 'Total Jarak (km)': round(total_jarak, 2), 'Rute': nama_rute})
+            start_time = time.time()
 
-                rute_df = pd.DataFrame(rute_terbaik)
-                st.dataframe(rute_df)
+            for year in range(start_year, end_year + 1):
+                for month in range(1, 13):
+                    for day in range(1, 32):
+                        try:
+                            guess = datetime.date(year, month, day)
+                            attempts += 1
+                            guess_dates.append((attempts, guess))
 
-                # Simpan sebagai CSV
-                csv = rute_df.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Unduh Hasil Rute", data=csv, file_name='rute_terbaik.csv', mime='text/csv')
+                            if guess == target_date:
+                                end_time = time.time()
+                                st.success(f"🎯 Tanggal ditemukan: {guess.strftime('%d-%m-%Y')}")
+                                st.write(f"🔁 Jumlah percobaan: {attempts}")
+                                st.write(f"🕒 Total waktu pencarian: {end_time - start_time:.4f} detik")
+                                found = True
+                                break
+                        except ValueError:
+                            continue
+                    if found:
+                        break
+                if found:
+                    break
 
-                # Visualisasi Peta Interaktif
-                st.subheader("🗺 Visualisasi Peta Interaktif")
-                map_center = [locations['Latitude'].mean(), locations['Longitude'].mean()]
-                m = folium.Map(location=map_center, zoom_start=12)
+            if not found:
+                st.warning("Tanggal tidak ditemukan dalam rentang tahun yang diberikan.")
 
-                marker_cluster = MarkerCluster().add_to(m)
-                for _, row in locations.iterrows():
-                    folium.Marker(
-                        location=[row['Latitude'], row['Longitude']],
-                        popup=row['Nama Tempat Wisata']
-                    ).add_to(marker_cluster)
+            # Visualisasi Grafik
+            x = [i[0] for i in guess_dates]
+            y = [i[1].toordinal() for i in guess_dates]
 
-                # Tampilkan rute terbaik pertama
-                best_route = all_routes[0][0]
-                route_coords = [[locations.loc[i, 'Latitude'], locations.loc[i, 'Longitude']] for i in best_route]
-                folium.PolyLine(route_coords, color='red', weight=5, opacity=0.8).add_to(m)
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(x, y, label="Tanggal Tebakan", color='green')
+            ax.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
+            ax.set_xlabel("Jumlah Percobaan")
+            ax.set_ylabel("Ordinal Tanggal")
+            ax.set_title("Grafik Proses Brute Force")
+            ax.legend()
+            ax.grid(True)
+            st.pyplot(fig)
 
-                st_folium(m, width=900, height=600)
-
-    except Exception as e:
-        st.error(f"Terjadi kesalahan saat membaca file: {e}")
+        except ValueError:
+            st.error("Format tanggal salah. Harap gunakan DD-MM-YYYY.")
