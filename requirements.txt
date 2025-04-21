@@ -1,12 +1,6 @@
 streamlit
 pandas
 folium
-streamlit_folium
-matplotlib
-
-streamlit
-pandas
-folium
 streamlit-folium
 matplotlib
 datetime
