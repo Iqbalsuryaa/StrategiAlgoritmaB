@@ -16,15 +16,16 @@ start_time = time.time()  # Mulai hitung waktu
 
 guess_dates = []
 
-# Pencarian brute force untuk tanggal lahir
 for year in range(start_year, end_year + 1):
     for month in range(1, 13):
         for day in range(1, 32):
             try:
+                # Coba membuat objek tanggal
                 guess = datetime.date(year, month, day)
                 attempts += 1
                 guess_dates.append((attempts, guess))
 
+                # Jika tanggal cocok dengan target
                 if guess == target_date:
                     end_time = time.time()
                     print(f"\n🎯 Tanggal ditemukan: {guess.strftime('%d-%m-%Y')}")
@@ -33,27 +34,28 @@ for year in range(start_year, end_year + 1):
                     found = True
                     break
             except ValueError:
+                # Melewatkan tanggal yang tidak valid, seperti 30 Februari
                 continue
         if found:
             break
     if found:
         break
 
-# Jika tidak ditemukan
-if not found:
-    print("❌ Tanggal tidak ditemukan dalam rentang yang diberikan.")
+# Jika tanggal ditemukan, lanjutkan visualisasi
+if found:
+    # Visualisasi grafik
+    x = [i[0] for i in guess_dates]
+    y = [i[1].toordinal() for i in guess_dates]  # Menggunakan ordinal untuk representasi tanggal
 
-# Visualisasi grafik (tanpa emoji di judul)
-x = [i[0] for i in guess_dates]  # Jumlah percobaan
-y = [i[1].toordinal() for i in guess_dates]  # Menggunakan ordinal untuk menggambarkan tanggal
-
-plt.figure(figsize=(10, 5))
-plt.plot(x, y, label="Tanggal Tebakan", color='green')
-plt.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
-plt.xlabel("Jumlah Percobaan")
-plt.ylabel("Ordinal Tanggal")
-plt.title("Grafik Waktu Pencarian Brute Force")
-plt.legend()
-plt.tight_layout()
-plt.grid(True)
-plt.show()
+    plt.figure(figsize=(10, 5))
+    plt.plot(x, y, label="Tanggal Tebakan", color='green')
+    plt.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
+    plt.xlabel("Jumlah Percobaan")
+    plt.ylabel("Ordinal Tanggal")
+    plt.title("Grafik Waktu Pencarian Brute Force")
+    plt.legend()
+    plt.tight_layout()
+    plt.grid(True)
+    plt.show()
+else:
+    print("Tanggal tidak ditemukan dalam rentang yang ditentukan.")
