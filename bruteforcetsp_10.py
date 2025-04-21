@@ -22,24 +22,25 @@ def login(username, password, correct_username, correct_password):
 # Fungsi brute force login
 def brute_force_login(correct_username, correct_password):
     attempts = 0
-
-    for i in range(1000000):  # dari 000000 hingga 999999
-        guess_password = str(i).zfill(6)  # Mengubah ke format 6 digit, contoh: 000007
+    for i in range(1000000):  # 000000 hingga 999999
+        guess_password = str(i).zfill(6)
         attempts += 1
-
         if login(correct_username, guess_password, correct_username, correct_password):
             return guess_password, attempts
-
-        if i % 500 == 0:
-            pass  # Bisa menambahkan log untuk setiap 500 percobaan
-
-    return None, attempts  # Jika password tidak ditemukan dalam rentang tersebut
+    return None, attempts
 
 # -----------------------------
 # Sidebar Navbar
 # -----------------------------
 st.sidebar.title("Menu")
-page = st.sidebar.radio("Pilih Halaman", ["Beranda", "Study Kasus II", "Study Kasus III"])
+page = st.sidebar.radio("Pilih Halaman", [
+    "Beranda", 
+    "Study Case I", 
+    "Study Case II", 
+    "Study Case III", 
+    "Study Case IV", 
+    "Study Case V"
+])
 
 # -----------------------------
 # Halaman Beranda
@@ -52,27 +53,30 @@ if page == "Beranda":
     """)
 
 # -----------------------------
-# Halaman Study Kasus II
+# Study Case I
 # -----------------------------
-elif page == "Study Kasus II":
+elif page == "Study Case I":
+    st.title("📘 Study Case I")
+    st.info("Halaman ini masih dalam pengembangan.")
+
+# -----------------------------
+# Study Case II: Brute Force Login
+# -----------------------------
+elif page == "Study Case II":
     st.title("🔓 Simulasi Brute Force Login")
 
-    # Input username dan password yang benar
     correct_username_input = st.text_input("Masukkan Username yang Benar", "")
     correct_password_input = st.text_input("Masukkan Password yang Benar", "", type="password")
 
-    # Input username dan password untuk login
     username_input = st.text_input("Username untuk Login", "")
     password_input = st.text_input("Password untuk Login", "", type="password")
 
-    # Tombol untuk cek login
     if st.button("Cek Login"):
         if login(username_input, password_input, correct_username_input, correct_password_input):
             st.success("✅ Login berhasil!")
         else:
             st.error("❌ Username atau password salah!")
 
-    # Simulasi brute force
     st.subheader("Simulasi Serangan Brute Force terhadap Password 6 Digit")
 
     if st.button("Mulai Brute Force"):
@@ -85,27 +89,25 @@ elif page == "Study Kasus II":
                     st.success(f"✅ Password ditemukan: {correct_password_found}")
                     st.write(f"🔁 Jumlah percobaan: {attempts}")
                 else:
-                    st.error("❌ Password tidak ditemukan dalam rentang 000000-999999.")
+                    st.error("❌ Password tidak ditemukan.")
 
 # -----------------------------
-# Halaman Study Kasus III: Rute Wisata Optimal
+# Study Case III: Optimasi Rute Wisata
 # -----------------------------
-elif page == "Study Kasus III":
+elif page == "Study Case III":
     st.title("📍 Optimasi Rute Tempat Wisata - Brute Force TSP")
 
-    # Upload CSV
     uploaded_file = st.file_uploader("Unggah file CSV tempat wisata:", type="csv")
 
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
 
         if 'Nama Tempat Wisata' not in df.columns or 'Latitude' not in df.columns or 'Longitude' not in df.columns:
-            st.error("❌ Kolom wajib: 'Nama Tempat Wisata', 'Latitude', dan 'Longitude' tidak ditemukan.")
+            st.error("❌ Kolom wajib tidak ditemukan.")
         else:
             locations = df[['Nama Tempat Wisata', 'Latitude', 'Longitude']].dropna().reset_index(drop=True)
             n = len(locations)
 
-            # Matriks Jarak
             distance_matrix = [[0]*n for _ in range(n)]
             for i in range(n):
                 for j in range(n):
@@ -115,17 +117,14 @@ elif page == "Study Kasus III":
                             locations.loc[j, 'Latitude'], locations.loc[j, 'Longitude']
                         )
 
-            # Brute Force TSP
             all_routes = []
             for perm in itertools.permutations(range(1, n)):
                 route = [0] + list(perm) + [0]
                 dist = sum(distance_matrix[route[i]][route[i+1]] for i in range(n))
                 all_routes.append((route, dist))
 
-            # Urutkan hasil
             all_routes.sort(key=lambda x: x[1])
-
-            jumlah_rute = st.slider("Pilih jumlah rute terbaik yang ingin ditampilkan:", 1, min(10, len(all_routes)), 3)
+            jumlah_rute = st.slider("Pilih jumlah rute terbaik:", 1, min(10, len(all_routes)), 3)
 
             st.subheader(f"🔁 {jumlah_rute} Rute Terbaik:")
             rute_terbaik = []
@@ -137,11 +136,9 @@ elif page == "Study Kasus III":
             rute_df = pd.DataFrame(rute_terbaik)
             st.dataframe(rute_df)
 
-            # Simpan sebagai CSV
             csv = rute_df.to_csv(index=False).encode('utf-8')
             st.download_button("📥 Unduh Hasil Rute", data=csv, file_name='rute_terbaik.csv', mime='text/csv')
 
-            # Peta Interaktif
             st.subheader("🗺 Visualisasi Peta Interaktif")
             map_center = [locations['Latitude'].mean(), locations['Longitude'].mean()]
             m = folium.Map(location=map_center, zoom_start=12)
@@ -153,9 +150,22 @@ elif page == "Study Kasus III":
                     popup=row['Nama Tempat Wisata']
                 ).add_to(marker_cluster)
 
-            # Tampilkan rute terbaik pertama
             best_route = all_routes[0][0]
             route_coords = [[locations.loc[i, 'Latitude'], locations.loc[i, 'Longitude']] for i in best_route]
             folium.PolyLine(route_coords, color='red', weight=5, opacity=0.8).add_to(m)
 
             st_folium(m, width=900, height=600)
+
+# -----------------------------
+# Study Case IV
+# -----------------------------
+elif page == "Study Case IV":
+    st.title("🧠 Study Case IV")
+    st.info("Halaman ini masih dalam pengembangan.")
+
+# -----------------------------
+# Study Case V
+# -----------------------------
+elif page == "Study Case V":
+    st.title("🔬 Study Case V")
+    st.info("Halaman ini masih dalam pengembangan.")
