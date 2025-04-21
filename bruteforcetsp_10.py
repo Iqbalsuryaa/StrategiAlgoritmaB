@@ -23,6 +23,22 @@ def haversine(lat1, lon1, lat2, lon2):
 st.set_page_config(page_title="Rute Wisata Optimal", layout="wide")
 st.title("📍 Optimasi Rute Tempat Wisata - Brute Force TSP")
 
+# -----------------------------
+# Sidebar
+# -----------------------------
+with st.sidebar:
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Map_pin_icon.svg/1024px-Map_pin_icon.svg.png", width=100)
+    st.header("🧭 Menu Navigasi")
+    st.markdown(
+        """
+        Aplikasi ini membantu menemukan rute terpendek untuk mengunjungi sejumlah tempat wisata menggunakan metode Brute Force TSP.
+
+        1. Unggah file CSV
+        2. Lihat rute optimal
+        3. Visualisasi di peta
+        """
+    )
+
 # Upload CSV
 uploaded_file = st.file_uploader("Unggah file CSV tempat wisata:", type="csv")
 
@@ -55,7 +71,7 @@ if uploaded_file:
         # Urutkan hasil
         all_routes.sort(key=lambda x: x[1])
 
-        jumlah_rute = st.slider("Pilih jumlah rute terbaik yang ingin ditampilkan:", 1, min(10, len(all_routes)), 3)
+        jumlah_rute = st.sidebar.slider("🎯 Jumlah rute terbaik:", 1, min(10, len(all_routes)), 3)
 
         st.subheader(f"🔁 {jumlah_rute} Rute Terbaik:")
         rute_terbaik = []
