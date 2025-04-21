@@ -10,15 +10,29 @@ target_date = datetime.datetime.strptime(input_date_str, "%d-%m-%Y").date()
 start_year = 1990
 end_year = target_date.year
 
+# Menyiapkan variabel
 attempts = 0
 found = False
 start_time = time.time()  # Mulai hitung waktu
 
 guess_dates = []
 
+# Daftar jumlah hari di tiap bulan
+days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+# Fungsi untuk memeriksa apakah tahun kabisat
+def is_leap_year(year):
+    return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+
 for year in range(start_year, end_year + 1):
     for month in range(1, 13):
-        for day in range(1, 32):
+        # Perbaiki jumlah hari pada bulan Februari jika tahun kabisat
+        if month == 2 and is_leap_year(year):
+            max_days = 29
+        else:
+            max_days = days_in_month[month - 1]
+        
+        for day in range(1, max_days + 1):
             try:
                 # Coba membuat objek tanggal
                 guess = datetime.date(year, month, day)
