@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 
 # Fungsi login sederhana
 def login(username, password, correct_username, correct_password):
@@ -17,8 +16,7 @@ def brute_force_login(target_username, correct_password):
             return guess_password, attempts
 
         if i % 500 == 0:
-            # Update percakapan untuk memberi tahu pengguna jika masih mencoba
-            pass
+            pass  # Bisa menambahkan log untuk setiap 500 percobaan
 
     return None, attempts  # Jika password tidak ditemukan dalam rentang tersebut
 
@@ -32,7 +30,6 @@ page = st.sidebar.radio("Pilih Halaman", ["Beranda", "Study Kasus II", "Study Ka
 # Halaman Study Kasus II
 # -----------------------------
 if page == "Study Kasus II":
-    # Input Username dan Password untuk menguji login
     st.title("🔓 Simulasi Brute Force Login")
 
     # Input username dan password yang benar
