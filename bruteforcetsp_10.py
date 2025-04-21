@@ -1,46 +1,24 @@
 import streamlit as st
-from time import time
 
-# Daftar akun asli (simulasi database)
-accounts = {
-    "Iqbal": "091102",
-    "Naufal": "090205",
-    "usertest": "112233",
-}
+# Fungsi login sederhana
+def login(username, password, correct_username, correct_password):
+    return username == correct_username and password == correct_password
 
-# Fungsi login (simulasi server)
-def login(username, password):
-    return accounts.get(username) == password
+# Fungsi brute force login
+def brute_force_login(correct_username, correct_password):
+    attempts = 0
 
-# Brute force terhadap banyak username
-def brute_force_multi_user():
-    start_time = time()
-    total_attempts = 0
-    results = []
+    for i in range(1000000):  # dari 000000 hingga 999999
+        guess_password = str(i).zfill(6)  # Mengubah ke format 6 digit, contoh: 000007
+        attempts += 1
 
-    for username in accounts.keys():
-        result = {"username": username, "found": False, "password": None, "attempts": 0}
-        for i in range(1000000):  # Coba 6 digit angka dari 000000 sampai 999999
-            guess = str(i).zfill(6)
-            total_attempts += 1
+        if login(correct_username, guess_password, correct_username, correct_password):
+            return guess_password, attempts
 
-            if login(username, guess):
-                result["password"] = guess
-                result["attempts"] = i + 1
-                result["found"] = True
-                results.append(result)
-                break
+        if i % 500 == 0:
+            pass  # Bisa menambahkan log untuk setiap 500 percobaan
 
-            if i % 50000 == 0:
-                pass  # Menyembunyikan log percobaan untuk efisiensi
-
-        if not result["found"]:
-            result["password"] = "Tidak ditemukan"
-            result["attempts"] = 1000000
-            results.append(result)
-
-    end_time = time()
-    return results, total_attempts, end_time - start_time
+    return None, attempts  # Jika password tidak ditemukan dalam rentang tersebut
 
 # -----------------------------
 # Sidebar Navbar
@@ -49,34 +27,37 @@ st.sidebar.title("Menu")
 page = st.sidebar.radio("Pilih Halaman", ["Beranda", "Study Kasus II", "Study Kasus III"])
 
 # -----------------------------
-# Halaman Study Kasus III
+# Halaman Study Kasus II
 # -----------------------------
-if page == "Study Kasus III":
-    st.title("🔓 Simulasi Brute Force pada Sistem Login")
+if page == "Study Kasus II":
+    st.title("🔓 Simulasi Brute Force Login")
 
-    # Menampilkan informasi tentang akun
-    st.subheader("Daftar Akun yang Tersedia:")
-    st.write(accounts)
+    # Input username dan password yang benar
+    correct_username_input = st.text_input("Masukkan Username yang Benar", "")
+    correct_password_input = st.text_input("Masukkan Password yang Benar", "", type="password")
 
-    # Input untuk memilih akun yang ingin dites login
-    selected_user = st.selectbox("Pilih Username untuk Tes Brute Force", list(accounts.keys()))
+    # Input username dan password untuk login
+    username_input = st.text_input("Username untuk Login", "")
+    password_input = st.text_input("Password untuk Login", "", type="password")
 
-    # Tombol untuk mulai brute force
+    # Tombol untuk cek login
+    if st.button("Cek Login"):
+        if login(username_input, password_input, correct_username_input, correct_password_input):
+            st.success("✅ Login berhasil!")
+        else:
+            st.error("❌ Username atau password salah!")
+
+    # Simulasi brute force
+    st.subheader("Simulasi Serangan Brute Force terhadap Password 6 Digit")
+
     if st.button("Mulai Brute Force"):
-        with st.spinner("🔄 Menjalankan serangan brute force..."):
-            results, total_attempts, elapsed_time = brute_force_multi_user()
-
-            # Menampilkan hasil
-            st.subheader(f"🔑 Hasil Brute Force untuk Akun: {selected_user}")
-            user_result = next((result for result in results if result["username"] == selected_user), None)
-            if user_result:
-                if user_result["found"]:
-                    st.success(f"✅ Password ditemukan untuk {user_result['username']}: {user_result['password']}")
-                    st.write(f"🔁 Jumlah percobaan: {user_result['attempts']}")
+        if correct_username_input == "" or correct_password_input == "":
+            st.error("❌ Silakan masukkan username dan password terlebih dahulu.")
+        else:
+            with st.spinner("🔄 Menjalankan serangan brute force..."):
+                correct_password_found, attempts = brute_force_login(correct_username_input, correct_password_input)
+                if correct_password_found:
+                    st.success(f"✅ Password ditemukan: {correct_password_found}")
+                    st.write(f"🔁 Jumlah percobaan: {attempts}")
                 else:
-                    st.error(f"❌ Password untuk {user_result['username']} tidak ditemukan.")
-            else:
-                st.error(f"❌ Tidak ada hasil ditemukan untuk {selected_user}.")
-
-            st.write(f"🕒 Total waktu: {elapsed_time:.2f} detik")
-            st.write(f"🔁 Total percobaan semua akun: {total_attempts}")
+                    st.error("❌ Password tidak ditemukan dalam rentang 000000-999999.")
