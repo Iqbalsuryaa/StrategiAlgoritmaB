@@ -1,54 +1,51 @@
-import datetime
-import time
-import matplotlib.pyplot as plt
+import streamlit as st
 
-# Input dari pengguna
-input_date_str = input("Masukkan tanggal lahir (format: DD-MM-YYYY): ")
-target_date = datetime.datetime.strptime(input_date_str, "%d-%m-%Y").date()
+# Menambahkan dan menghapus akun dalam daftar
+accounts = {}
 
-# Rentang tahun tebakan
-start_year = 1990
-end_year = target_date.year
+# Fungsi untuk menambah akun
+def add_account(username, password):
+    if username in accounts:
+        st.warning(f"🛑 Username {username} sudah ada!")
+    else:
+        accounts[username] = password
+        st.success(f"✅ Akun {username} berhasil ditambahkan!")
 
-attempts = 0
-found = False
-start_time = time.time()  # Mulai hitung waktu
+# Fungsi untuk menghapus akun
+def remove_account(username):
+    if username in accounts:
+        del accounts[username]
+        st.success(f"✅ Akun {username} berhasil dihapus!")
+    else:
+        st.warning(f"🛑 Akun {username} tidak ditemukan!")
 
-guess_dates = []
+# Menampilkan akun yang tersedia
+def show_accounts():
+    if accounts:
+        st.write("🔑 Daftar Akun yang Tersedia:")
+        for username in accounts.keys():
+            st.write(f"- {username}")
+    else:
+        st.write("❌ Belum ada akun yang tersedia.")
 
-for year in range(start_year, end_year + 1):
-    for month in range(1, 13):
-        for day in range(1, 32):
-            try:
-                guess = datetime.date(year, month, day)
-                attempts += 1
-                guess_dates.append((attempts, guess))
+# Input untuk username dan password
+username_input = st.text_input("Masukkan Username")
+password_input = st.text_input("Masukkan Password", type="password")
 
-                if guess == target_date:
-                    end_time = time.time()
-                    print(f"\n🎯 Tanggal ditemukan: {guess.strftime('%d-%m-%Y')}")
-                    print(f"🔁 Jumlah percobaan: {attempts}")
-                    print(f"🕒 Total waktu pencarian: {end_time - start_time:.4f} detik")
-                    found = True
-                    break
-            except ValueError:
-                continue
-        if found:
-            break
-    if found:
-        break
+# Menu untuk memilih aksi
+action = st.selectbox("Pilih Aksi", ("Tambah Akun", "Hapus Akun", "Tampilkan Daftar Akun"))
 
-# Visualisasi grafik pencarian brute force
-x = [i[0] for i in guess_dates]  # Jumlah percobaan
-y = [i[1].toordinal() for i in guess_dates]  # Menggunakan ordinal untuk menggambarkan tanggal
+# Berdasarkan pilihan aksi, eksekusi fungsi yang sesuai
+if action == "Tambah Akun":
+    if st.button("Tambah Akun"):
+        add_account(username_input, password_input)
+        st._rerun()  # Refresh halaman setelah penambahan akun
 
-plt.figure(figsize=(10, 5))
-plt.plot(x, y, label="Tanggal Tebakan", color='green')
-plt.axhline(target_date.toordinal(), color='red', linestyle='--', label="Tanggal Sebenarnya")
-plt.xlabel("Jumlah Percobaan")
-plt.ylabel("Ordinal Tanggal")
-plt.title("Grafik Waktu Pencarian Brute Force untuk Tanggal Lahir")
-plt.legend()
-plt.tight_layout()
-plt.grid(True)
-plt.show()
+elif action == "Hapus Akun":
+    if st.button("Hapus Akun"):
+        remove_account(username_input)
+        st._rerun()  # Refresh halaman setelah penghapusan akun
+
+elif action == "Tampilkan Daftar Akun":
+    show_accounts()
+
