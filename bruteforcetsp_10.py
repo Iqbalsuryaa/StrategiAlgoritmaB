@@ -33,20 +33,21 @@ if page == "Study Kasus II":
     st.title("🔓 Simulasi Brute Force Login")
 
     # Input username dan password yang benar
-    correct_username_input = st.text_input("Masukkan Username yang Benar", "percobaan")
-    correct_password_input = st.text_input("Masukkan Password yang Benar", "091102", type="password")
+    correct_username_input = st.text_input("Masukkan Username yang Benar", "")
+    correct_password_input = st.text_input("Masukkan Password yang Benar", "", type="password")
 
     # Input username dan password untuk login
     username_input = st.text_input("Username untuk Login", "")
     password_input = st.text_input("Password untuk Login", "", type="password")
 
+    # Tombol untuk cek login
     if st.button("Cek Login"):
         if login(username_input, password_input, correct_username_input, correct_password_input):
             st.success("✅ Login berhasil!")
         else:
             st.error("❌ Username atau password salah!")
 
-    # Jika sudah berhasil login, tampilkan simulasi brute force
+    # Simulasi brute force
     st.subheader("Simulasi Serangan Brute Force terhadap Password 6 Digit")
 
     if st.button("Mulai Brute Force"):
