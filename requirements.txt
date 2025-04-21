@@ -4,3 +4,13 @@ folium
 streamlit_folium
 matplotlib
 
+streamlit
+pandas
+folium
+streamlit-folium
+matplotlib
+datetime
+uvicorn
+rich
+markdown-it-py
+pygments
